@@ -179,7 +179,7 @@ class ReportPage(ContentPage):
             yr_select = Select(self.wait.until(EC.element_to_be_clickable((By.ID, '_ctl0_ContentPlaceHolder1_ddlyear'))))
             yr_select.select_by_visible_text(str(year))
             
-            run = self.driver.find_element(By.XPATH, '//*[@id="_ctl0_ContentPlaceHolder1_btnSearch"]')
+            run = self.driver.find_element(By.XPATH, '//*[@id="_ctl0_ContentPlaceHolder1_btnRunItNow"]')
             run.click()
 
             self.pull(tableid, savefile = f"{self.mydir+str(i)+month+year}.csv")
