@@ -5,7 +5,7 @@ from classes import *
 class CPTs_Report_Page(ReportPage):
     def __init__(self, driver, wait) -> None:
         WebPage.__init__(self, driver, wait)
-        self.href = "EncounterProvidersDetailedReport"
+        self.href = "cpt_bills_reportV2"
         self.table_id = "report"
         self.cpt_txtbox_id = '_ctl0_ContentPlaceHolder1_txtcpt'
     
