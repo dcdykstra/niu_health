@@ -1,3 +1,6 @@
+# There may be redundancies in this .py file vs the classes.py file but,
+# everything here is unique for the Detainee Data .XLSX workbook.
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
@@ -13,14 +16,18 @@ class NIU():
     def __init__(self, driver, wait) -> None:
         self.driver = driver
         self.wait = wait
+
+        # HTML table id's
         self.apt_table = '_ctl0_ContentPlaceHolder1_gvAppointments'
         self.pt_table = '_ctl0_ContentPlaceHolder1_gvCount'
         self.cpt_table = '_ctl0_ContentPlaceHolder1_gvreport'
 
+        # Columns being saved from each table
         self.apt_df_columns = ['ID', 'Service Date', 'Reason', 'Time']
         self.pt_df_columns = ['ID', 'First Name', 'Last Name', 'DOB', 'Gender', 'Address', 'State', 'Zip', 'Visit Count']
         self.cpt_df_columns = ['ID', 'Assessment Date', 'CSAMI Code', 'CSAMI']
 
+        # Name of each report
         self.apt_report = 'Appointments Report'
         self.pt_report = 'Patient Visit Report'
         self.cpt_report = 'CPT Code Report'
@@ -28,23 +35,21 @@ class NIU():
         self.report_tables = [self.apt_table, self.pt_table, self.cpt_table]
         self.report_columns = [self.apt_df_columns, self.pt_df_columns, self.cpt_df_columns]
         self.report_names = [self.apt_report, self.pt_report, self.cpt_report]
-
         self.report_zip = list(zip(self.report_tables, self.report_names, self.report_columns))
-        #self.apt_download = 'Appointment'
-        #self.pt_download = 'Patient'
-        #self.cpt_download = 'CPT'
 
-        #self.apt_href = 'AppointmentReportv1' 
-        #self.pt_href = 'visitreport'
-        #self.cpt_href = 'cpt_bills_reportV2'
-
+        # Creating self.stage object for usage of functions from classes.py -> ReportPage()
         self.stage = ReportPage(self.driver, self.wait)
 
+    # Staging appointment reports table
+    # Date range only
     def stage_apt(self, date_from_val, date_to_val):
         date_select = Select(self.wait.until(EC.element_to_be_clickable((By.ID, '_ctl0_ContentPlaceHolder1_ddltypes'))))
         date_select.select_by_value("R")
         self.stage.set_date("YTD", date_from_val, date_to_val)
 
+    # Staging patient visit report table
+    # Selecting HPD CRD, deselecting selfpay and nonbillable encounters
+    # Date range
     def stage_pt(self, date_from_val, date_to_val):
         facility_select = Select(self.wait.until(EC.presence_of_element_located((By.ID, '_ctl0_ContentPlaceHolder1_ddlfacility'))))
         facility_select.select_by_visible_text('HPD CRD')
@@ -54,6 +59,9 @@ class NIU():
         non_bill.click()
         self.stage.set_date("YTD", date_from_val, date_to_val)
 
+    # Staging CPT report
+    # HPD CRD PROGRAM CPT Codes
+    # Date Range
     def stage_cpt(self, date_from_val, date_to_val):
         date_select = Select(self.wait.until(EC.element_to_be_clickable((By.ID, '_ctl0_ContentPlaceHolder1_ddltypes'))))
         date_select.select_by_value("R")
@@ -62,8 +70,9 @@ class NIU():
         facility_check.click()
         self.stage.set_date("YTD", date_from_val, date_to_val)
 
+    # Generates columns to be used in the XLSX workbook
+    # Age and CSAMI Assessment Count
     def gen_columns(self, df):
-        ## AGE
         dob = "DOB"
         today = dt.datetime.today()
         df[dob] = pd.to_datetime(df[dob]) 
@@ -78,8 +87,9 @@ class NIU():
         ## CSAMI Count
         df["CSAMI Assessment Count"] = [len(str(x).split(",")) if len(str(x))>=5 else 0 for x in df["CSAMI Code"]]
 
+    # Multi-use function specifically for scraping tables from the 3 main reports for this workbook
+    # If no tables are present, it creates a dataframe with 1 row with all None values
     def scrape_table(self, table_id): 
-        # table = self.wait.until(EC.presence_of_element_located((By.ID, f'{table_id}')))
         soup = BeautifulSoup(self.driver.page_source, "html.parser")
         table = soup.find('table', id=f'{table_id}')
         headers = []
@@ -99,19 +109,15 @@ class NIU():
             
 
             if table_id == self.apt_table: 
-                # df.columns = df.columns.rstrip()
                 df['ID'] = pd.to_numeric(df.iloc[:,7], errors='coerce')
                 df['Time'] = df.iloc[:,1]
                 df['Reason'] = df.iloc[:,11].str.upper()
                 df['Service Date'] = pd.to_datetime(df.iloc[:,0], errors='coerce')
-                # df[pd.notnull(df['Service Date'])]
                 df['Service Date'] = df['Service Date'].dt.strftime('%m-%d-%Y') 
                 df = df[self.apt_df_columns]
                 assert (len(df)>1) and (df["ID"].isna()[0] == False)
 
             elif table_id == self.cpt_table: 
-                # df.columns = df.columns.rstrip()
-                # df = df.replace(r'^s*$', float('NaN'), regex = True)
                 df['ID'] = pd.to_numeric(df.iloc[:,0], errors='coerce')
                 df['Assessment Date'] = df.iloc[:,9]
                 df['CSAMI Code'] = df.iloc[:,10]
@@ -161,6 +167,8 @@ class NIU():
                 empty_dict['Visit Count'] = None
         return pd.DataFrame(empty_dict, index=[0])
 
+    # Generates the final dataframe to be used in the XLSX writer.
+    # Reorders columns
     def gen_final(self, *args, page):
         df_list = []
         for arg in args:
@@ -177,5 +185,3 @@ class NIU():
             grouped_vals = ['ID', 'Last Name', 'First Name', 'Age', 'DOB', 'Gender', 'Assessment Date', 'CSAMI Code', 'CSAMI']
             final = final[grouped_vals]
             return final
-
-       

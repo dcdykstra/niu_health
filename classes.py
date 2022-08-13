@@ -18,15 +18,19 @@ class WebPage():
     def __init__(self, driver, wait) -> None:
         self.driver = driver
         self.wait = wait
-        self.mydir = "E:\\dir1\\h3rc\\niu\\data\\"
+        self.mydir = ""
         self.content = '_ctl0_ContentPlaceHolder1_gv'
 
+    # Generates the bs4 html for the page
     def make_soup(self):
         return BeautifulSoup(self.driver.page_source, "html.parser")
 
+    # Resets the iframe to the default iframe
     def reset_iframe(self):
         self.driver.switch_to.default_content()
 
+    # For merging files after being collected in the data folder
+    # Mostly been used to combine .csv files after set_date_month(tableid, date_from_val, date_to_val) and set_date_submit(tableid, date_from_val, date_to_val, day_intervals)
     def merge(self, savefile):
         files = os.path.join(self.mydir, "*.csv")
         files = glob.glob(files)
@@ -55,11 +59,13 @@ class LoginPage(WebPage):
             print("No multiple logins - continue")
 
 class ContentPage(WebPage):
+    # Navigates to the reports page
     def nav_reports(self): 
         self.reset_iframe()
         self.reports_menu = self.wait.until(EC.presence_of_element_located((By.XPATH, '//a[contains(@href, "tabname=Reports")]')))
         self.reports_menu.click()
 
+    # Navigates to the patient's page
     def nav_patients(self): 
         self.reset_iframe()
         nav_menu = self.wait.until(EC.presence_of_element_located((By.XPATH, '//a[contains(@href, "tabname=Patients")]')))
@@ -68,6 +74,8 @@ class ContentPage(WebPage):
         self.driver.switch_to.frame(content_iframe)
 
 class ReportPage(ContentPage):
+    # Loads a specific report page based on href key
+    # Must nav_reports() first
     def load_report(self, report_href):
         self.reset_iframe()
         content_iframe = self.wait.until(EC.presence_of_element_located((By.ID, 'contentframe')))
@@ -76,7 +84,32 @@ class ReportPage(ContentPage):
         self.driver.execute_script("arguments[0].click();", report)
         report_iframe = self.wait.until(EC.presence_of_element_located((By.ID, 'ReportMasterFrame')))
         self.driver.switch_to.frame(report_iframe)
-    
+
+    # Pulls data from the table 
+    # 3 Different types of tableid's ("report", "Appointments", "Count")
+    def pull(self, tableid, savefile):
+        try:
+            # report, Appointments, Count
+            table = self.wait.until(EC.presence_of_element_located((By.ID, self.content+tableid)))
+            soup = self.make_soup()
+            table = soup.find_all("table", id = self.content+tableid)
+            body = table[0].find("tbody")
+
+            head = table[0].find("thead").find_all("th")
+            cpt_headers = [unidecode(i.text.strip()) for i in head]
+
+            temp = []
+            for i in body.find_all("tr"):
+                temp.append([unidecode(j.text) for j in i.find_all("td")])
+
+            df = pd.DataFrame(temp, columns = cpt_headers)
+            df["Bill#"] = df["Bill#"].apply(lambda x: x.strip("\n"))
+            df.drop(df.tail(1).index, inplace=True)
+            df.to_csv(savefile)
+            
+        except TimeoutException:
+            print("No Table")
+
     # Function to select dates when a date range option exists
     def select_dates(self, start, end):
         date_from = self.wait.until(EC.element_to_be_clickable((By.XPATH, '//*[contains(@id, "txtFrom")]')))
@@ -117,29 +150,10 @@ class ReportPage(ContentPage):
             res.append([j.strftime("%m-%d-%Y") for j in i])
         return res
 
-    def pull(self, tableid, savefile):
-        try:
-            # report, Appointments, Count
-            table = self.wait.until(EC.presence_of_element_located((By.ID, self.content+tableid)))
-            soup = self.make_soup()
-            table = soup.find_all("table", id = self.content+tableid)
-            body = table[0].find("tbody")
-
-            head = table[0].find("thead").find_all("th")
-            cpt_headers = [unidecode(i.text.strip()) for i in head]
-
-            temp = []
-            for i in body.find_all("tr"):
-                temp.append([unidecode(j.text) for j in i.find_all("td")])
-
-            df = pd.DataFrame(temp, columns = cpt_headers)
-            df["Bill#"] = df["Bill#"].apply(lambda x: x.strip("\n"))
-            df.drop(df.tail(1).index, inplace=True)
-            df.to_csv(savefile)
-            
-        except TimeoutException:
-            print("No Table")
-
+    # Pulls data by a date range
+    # Used for specific date ranges or single days
+    # Avoid using for large date ranges
+    # day_intervals = 28 is to avoid an eMed issue where they don't allow you to pull data for greater than 1 month (28 days because of February)
     def set_date_submit(self, tableid, date_from_val, date_to_val, day_intervals=28):
         split_range = self.date_range_greater_than_28(date_from_val, date_to_val, day_intervals)
         date_select = Select(self.wait.until(EC.element_to_be_clickable((By.ID, '_ctl0_ContentPlaceHolder1_ddltypes'))))
@@ -149,6 +163,8 @@ class ReportPage(ContentPage):
             self.set_date("YTD", v[0], v[1])
             self.pull(tableid, savefile = f"{self.mydir}temp{i}.csv")
 
+    # Pulls data by month
+    # Use this when pulling data from Year to Date or Month to Date
     def set_date_month(self, tableid, date_from_val, date_to_val):
         # month, year
         dates = pd.period_range(date_from_val, date_to_val, freq="M").strftime("%B %Y")
@@ -168,6 +184,7 @@ class ReportPage(ContentPage):
 
             self.pull(tableid, savefile = f"{self.mydir+str(i)+month+year}.csv")
 
+# Specifically created to pull patient demographic data
 class PatientPage(ContentPage):
     # Creates a dictionary of keys to search by in the patient search page
     def patients_search_dict(self): 
@@ -201,6 +218,7 @@ class PatientPage(ContentPage):
         demo = self.driver.find_element(By.XPATH, '//a[contains(@href, "PatientDetails")]')
         demo.click()
 
+    # Pulls patient data from their demo page
     def pull_patient_data(self):
         soup = self.make_soup()
         txt_inp = soup.find_all("input", type = "text", id = re.compile("_ctl0_ContentPlaceHolder1"))
@@ -259,6 +277,8 @@ class PatientPage(ContentPage):
         
         return {k: final_dict[k] for k in order}
 
+    # Pull patient demographic data based on a list of chart numbers and return a dataframe of all the patient data
+    # WIP
     def pull_data_ls(self, chart_ls):
         failed = []
         df = []
@@ -297,6 +317,8 @@ class PatientPage(ContentPage):
         #     continue
             # pd.DataFrame(df).to_csv(f"{self.mydir}pull{i}.csv")
     
+    # Prepares a dataframe for pull_data_ls()
+    # Removes Chart # = 0, gets unique Chart #'s
     def prep_pull(self, file):
         df = pd.read_csv(self.mydir+file, index_col=0)
         df.drop(df[df["Chart #"] == 0].index)

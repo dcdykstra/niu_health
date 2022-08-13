@@ -4,20 +4,14 @@ import xlsxwriter
 class XLSX():
     def __init__(self, date) -> None:
         self.workbook_dict = {}
-        self.subdir = 'E:\\dir1\\h3rc\\niu\\data\\'
+        self.subdir = ''
         self.date = date
         self.file_name = f'Detainee_List_{self.date}.xlsx'
         self.sheet1= f'{self.date}_CRD List' 
         self.sheet2= 'CSAMI Screening History'
 
+    # No longer necessary
     def get_col_widths(self, dataframe):
-        # First we find the maximum length of the index column
-        idx_max = max([len(str(s)) for s in dataframe.index.values] +
-                      [len(str(dataframe.index.name))])
-        # Then, we concatenate this to the max of the lengths of column name and its values for each column, left to right
-        return [idx_max] + [max([len(str(s)) for s in dataframe[col].values] + [len(col)]) for col in dataframe.columns]
-
-    def get_col_width(self, dataframe):
         # First we find the maximum length of the index column
         idx_max = max([len(str(s)) for s in dataframe.index.values] +
                       [len(str(dataframe.index.name))])
