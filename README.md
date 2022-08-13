@@ -49,21 +49,23 @@ def test_detainee(self):
 
 ### Example code block for pulling of specific cpt codes
 ```python
+# Must import CPTs_Report_Page
+# from cpt_report import CPTs_Report_Page
 def test_cpt(self):
-        driver = self.driver
-        wait = self.wait
+    driver = self.driver
+    wait = self.wait
 
-        login = LoginPage(driver, wait)
-        report = CPTs_Report_Page(driver, wait)
+    login = LoginPage(driver, wait)
+    report = CPTs_Report_Page(driver, wait)
 
-        driver.get("https://service.emedpractice.com/index.aspx")
-        login.enter_username("YOUR_USERNAME")
-        login.enter_password("YOUR_PASSWORD")
-        login.click_login()
+    driver.get("https://service.emedpractice.com/index.aspx")
+    login.enter_username("YOUR_USERNAME")
+    login.enter_password("YOUR_PASSWORD")
+    login.click_login()
 
-        report.nav_reports()
-        report.load_report(report.href)
-        report.enter_cpt_code(YOUR_CPT_CODES) # ie: "99214,99123"
-        report.set_date_month(report.table_id, "01-01-2022", "07-31-2022")
-        report.merge(report.mydir+"merged.csv")
+    report.nav_reports()
+    report.load_report(report.href)
+    report.enter_cpt_code(YOUR_CPT_CODES) # ie: "99214,99123"
+    report.set_date_month(report.table_id, "01-01-2022", "07-31-2022")
+    report.merge(report.mydir+"merged.csv")
 ```        
