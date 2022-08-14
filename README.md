@@ -1,4 +1,4 @@
-# Detainee Data Web Scraper
+# eMed Selenium Web Scraper
 
 ### Setup
 + Download required packages
