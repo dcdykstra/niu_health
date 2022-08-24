@@ -1,11 +1,11 @@
 from selenium.webdriver.common.by import By
 from unidecode import unidecode
 
-from classes import *
+from classes import ReportPage
 
 class APT_Report(ReportPage):
     def __init__(self, driver, wait) -> None:
-        WebPage.__init__(self, driver, wait)
+        super().__init__(self, driver, wait)
         self.href = "AppointmentReportv1"
         self.table_id = "Appointments"
         self.select_all_id = "_ctl0_ContentPlaceHolder1_chkSelectAllProviders"

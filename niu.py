@@ -1,16 +1,14 @@
 # There may be redundancies in this .py file vs the classes.py file but,
 # everything here is unique for the Detainee Data .XLSX workbook.
+import datetime as dt
+import pandas as pd
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.common.keys import Keys
-from classes import *
+from classes import ReportPage
 from bs4 import BeautifulSoup
 from functools import reduce
-
-import datetime as dt
-import pandas as pd
 
 class NIU():
     def __init__(self, driver, wait) -> None:
@@ -75,21 +73,21 @@ class NIU():
     def gen_columns(self, df):
         dob = "DOB"
         today = dt.datetime.today()
-        df[dob] = pd.to_datetime(df[dob]) 
+        df[dob] = pd.to_datetime(df[dob])
         df['Age'] = df[dob].apply(
-                lambda x: today.year - x.year - 
-                ((today.month, today.day) < (x.month, x.day)) 
+                lambda x: today.year - x.year -
+                ((today.month, today.day) < (x.month, x.day))
                 )
         df.loc[df['Age'] > 89, 'Age'] = '>90'
         df.loc[df['Age'] < 1, 'Age'] = 'INPUT ERROR'
-        df[dob] = df[dob].dt.strftime('%m-%d-%Y') 
+        df[dob] = df[dob].dt.strftime('%m-%d-%Y')
 
         ## CSAMI Count
         df["CSAMI Assessment Count"] = [len(str(x).split(",")) if len(str(x))>=5 else 0 for x in df["CSAMI Code"]]
 
     # Multi-use function specifically for scraping tables from the 3 main reports for this workbook
     # If no tables are present, it creates a dataframe with 1 row with all None values
-    def scrape_table(self, table_id): 
+    def scrape_table(self, table_id):
         soup = BeautifulSoup(self.driver.page_source, "html.parser")
         table = soup.find('table', id=f'{table_id}')
         headers = []
@@ -106,27 +104,27 @@ class NIU():
                 row = [header.text for header in row_data]
                 length = len(df)
                 df.loc[length] = row
-            
 
-            if table_id == self.apt_table: 
+
+            if table_id == self.apt_table:
                 df['ID'] = pd.to_numeric(df.iloc[:,7], errors='coerce')
                 df['Time'] = df.iloc[:,1]
                 df['Reason'] = df.iloc[:,11].str.upper()
                 df['Service Date'] = pd.to_datetime(df.iloc[:,0], errors='coerce')
-                df['Service Date'] = df['Service Date'].dt.strftime('%m-%d-%Y') 
+                df['Service Date'] = df['Service Date'].dt.strftime('%m-%d-%Y')
                 df = df[self.apt_df_columns]
-                assert (len(df)>1) and (df["ID"].isna()[0] == False)
+                assert (len(df)>1) and (not df["ID"].isna()[0])
 
-            elif table_id == self.cpt_table: 
+            elif table_id == self.cpt_table:
                 df['ID'] = pd.to_numeric(df.iloc[:,0], errors='coerce')
                 df['Assessment Date'] = df.iloc[:,9]
                 df['CSAMI Code'] = df.iloc[:,10]
                 df['CSAMI'] = df.iloc[:,11]
                 df = df[self.cpt_df_columns].replace('\n',' ')
                 df = df.groupby(['ID', 'Assessment Date']).agg(', '.join).reset_index()
-                assert (len(df)>1) and (df["ID"].isna()[0] == False)
-                
-            elif table_id == self.pt_table: 
+                assert (len(df)>1) and (not df["ID"].isna()[0])
+
+            elif table_id == self.pt_table:
                 df['ID'] = pd.to_numeric(df.iloc[:,0], errors='coerce')
                 df['Last Name'] = df.iloc[:,2].str.upper()
                 df['First Name'] = df.iloc[:,3].str.upper()
@@ -137,10 +135,10 @@ class NIU():
                 df['Zip'] = df.iloc[:,10]
                 df['Visit Count'] = df.iloc[:,17].str.strip()
                 df = df[self.pt_df_columns]
-                assert (len(df)>1) and (df["ID"].isna()[0] == False)
+                assert (len(df)>1) and (not df["ID"].isna()[0])
 
-            else: 
-                print('nothing')   
+            else:
+                print('nothing')
 
             df = df.dropna(subset = ['ID'])
             return df
@@ -176,12 +174,12 @@ class NIU():
         final = reduce(lambda x, y: pd.merge(x, y, on = 'ID', how='left'), df_list)
 
         self.gen_columns(final)
-        
+
         if page == 1:
             ungrouped_vals = ['ID', 'Last Name', 'First Name', 'Age', 'DOB', 'Gender', 'Service Date', 'Time', 'Reason', 'CSAMI Assessment Count']
             final = final[ungrouped_vals]
             return final
-        elif page == 2:
+        if page == 2:
             grouped_vals = ['ID', 'Last Name', 'First Name', 'Age', 'DOB', 'Gender', 'Assessment Date', 'CSAMI Code', 'CSAMI']
             final = final[grouped_vals]
             return final

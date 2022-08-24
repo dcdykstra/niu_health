@@ -1,9 +1,3 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoSuchWindowException
-
 import pandas as pd
 import os
 import glob
@@ -11,8 +5,15 @@ import re
 from datetime import datetime
 from datetime import timedelta
 from bs4 import BeautifulSoup
-import pandas as pd
 from unidecode import unidecode
+
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import (TimeoutException,
+                                        NoSuchElementException,
+                                        NoSuchWindowException)
 
 class WebPage():
     def __init__(self, driver, wait) -> None:
@@ -29,8 +30,12 @@ class WebPage():
     def reset_iframe(self):
         self.driver.switch_to.default_content()
 
-    # For merging files after being collected in the data folder
-    # Mostly been used to combine .csv files after set_date_month(tableid, date_from_val, date_to_val) and set_date_submit(tableid, date_from_val, date_to_val, day_intervals)
+    """
+    merge(savefile) is for merging files after being collected in the data folder.
+    Mostly been used to combine .csv files after
+    set_date_month(tableid, date_from_val, date_to_val) and
+    set_date_submit(tableid, date_from_val, date_to_val, day_intervals)
+    """
     def merge(self, savefile):
         files = os.path.join(self.mydir, "\\", "*.csv")
         files = glob.glob(files)
@@ -40,10 +45,13 @@ class WebPage():
         df.to_csv(savefile)
 
 class LoginPage(WebPage):
+    def __init__(self, driver, wait) -> None:
+        super().__init__(driver, wait)
+
     def enter_username(self, username):
         self.driver.find_element(By.ID, 'email').clear()
         self.driver.find_element(By.ID, 'email').send_keys(username)
-    
+
     def enter_password(self, password):
         self.driver.find_element(By.ID, 'password').clear()
         self.driver.find_element(By.ID, 'password').send_keys(password)
@@ -51,22 +59,25 @@ class LoginPage(WebPage):
     def click_login(self):
         login = self.driver.find_element(By.ID, "SigninBtn")
         login.click()
-        
-        try: 
+
+        try:
             cont = self.wait.until(EC.element_to_be_clickable((By.ID, 'btnContinueLogin')))
             cont.click()
         except:
             print("No multiple logins - continue")
 
 class ContentPage(WebPage):
+    def __init__(self, driver, wait) -> None:
+        super().__init__(driver, wait)
+
     # Navigates to the reports page
-    def nav_reports(self): 
+    def nav_reports(self):
         self.reset_iframe()
         self.reports_menu = self.wait.until(EC.presence_of_element_located((By.XPATH, '//a[contains(@href, "tabname=Reports")]')))
         self.reports_menu.click()
 
     # Navigates to the patient's page
-    def nav_patients(self): 
+    def nav_patients(self):
         self.reset_iframe()
         nav_menu = self.wait.until(EC.presence_of_element_located((By.XPATH, '//a[contains(@href, "tabname=Patients")]')))
         nav_menu.click()
@@ -74,6 +85,9 @@ class ContentPage(WebPage):
         self.driver.switch_to.frame(content_iframe)
 
 class ReportPage(ContentPage):
+    def __init__(self, driver, wait) -> None:
+        super().__init__(driver, wait)
+
     # Loads a specific report page based on href key
     # Must nav_reports() first
     def load_report(self, report_href):
@@ -85,7 +99,7 @@ class ReportPage(ContentPage):
         report_iframe = self.wait.until(EC.presence_of_element_located((By.ID, 'ReportMasterFrame')))
         self.driver.switch_to.frame(report_iframe)
 
-    # Pulls data from the table 
+    # Pulls data from the table
     # 3 Different types of tableid's ("report", "Appointments", "Count")
     def pull(self, tableid, savefile):
         try:
@@ -106,7 +120,7 @@ class ReportPage(ContentPage):
             df["Bill#"] = df["Bill#"].apply(lambda x: x.strip("\n"))
             df.drop(df.tail(1).index, inplace=True)
             df.to_csv(savefile)
-            
+
         except TimeoutException:
             print("No Table")
 
@@ -122,19 +136,19 @@ class ReportPage(ContentPage):
         date_to.send_keys(end)
         date_to.send_keys(Keys.ENTER)
 
-    def set_date(self, date_option, date_from_val, date_to_val): 
+    def set_date(self, date_option, date_from_val, date_to_val):
         if date_option == 'Daily':
             self.select_dates(date_to_val, date_to_val)
         elif date_option == 'YTD':
             self.select_dates(date_from_val, date_to_val)
-    
+
     # Splits a date range into processable day intervals to avoid downloads
     def date_range_greater_than_28(self, startday, endday, day_intervals):
         start = datetime.strptime(startday,"%m-%d-%Y")
         end = datetime.strptime(endday,"%m-%d-%Y")
         diff = (end  - start)
         mod_diff = diff.days//day_intervals
-    
+
         temp = []
         if diff.days > day_intervals:
             while mod_diff > 0:
@@ -178,7 +192,7 @@ class ReportPage(ContentPage):
             mo_select.select_by_visible_text(str(month))
             yr_select = Select(self.wait.until(EC.element_to_be_clickable((By.ID, '_ctl0_ContentPlaceHolder1_ddlyear'))))
             yr_select.select_by_visible_text(str(year))
-            
+
             run = self.driver.find_element(By.XPATH, '//*[@id="_ctl0_ContentPlaceHolder1_btnRunItNow"]')
             run.click()
 
@@ -186,8 +200,11 @@ class ReportPage(ContentPage):
 
 # Specifically created to pull patient demographic data
 class PatientPage(ContentPage):
+    def __init__(self, driver, wait) -> None:
+        super().__init__(driver, wait)
+
     # Creates a dictionary of keys to search by in the patient search page
-    def patients_search_dict(self): 
+    def patients_search_dict(self):
         self.nav_patients()
         soup = self.make_soup()
         inputs = soup.find_all("input", class_ = re.compile("text ui-widget-content ui-corner-all"))
@@ -199,14 +216,14 @@ class PatientPage(ContentPage):
         for i in spans:
             keys.append(i.text)
         return dict(zip(keys, vals))
-    
+
     # Searches for a patient when on the patient search page with a key and value
-    def search_patients(self, key, value): 
+    def search_patients(self, key, value):
         query_select = self.wait.until(EC.element_to_be_clickable((By.ID, self.patients_search_dict().get(key))))
         query_select.clear()
         query_select.click()
         query_select.send_keys(value, Keys.RETURN)
-    
+
     # Opens a patient file based on a chart number
     def open_patient_file(self, chart):
         self.reset_iframe()
@@ -214,7 +231,7 @@ class PatientPage(ContentPage):
         self.search_patients("Chart#", chart)
         pf = self.driver.find_element(By.ID, '_ctl0_ContentPlaceHolder1_gvCurrentPatient__ctl2_hlSelect')
         pf.click()
-        
+
         demo = self.driver.find_element(By.XPATH, '//a[contains(@href, "PatientDetails")]')
         demo.click()
 
@@ -225,13 +242,12 @@ class PatientPage(ContentPage):
         opt_sel = soup.find_all("select", id = re.compile("_ctl0_ContentPlaceHolder1"))
         btn_inp = soup.find_all("input", type="radio")
         chk_inp = soup.find_all("input", type="checkbox")
-        order = ["Ethnicity *", "Sex *", "Date Of Birth *", "Country*", "State *", 'Preferred Language', 
-                "Preferred Contact", 'Ok to receive msgs', 'App.Reminder Contact', "Status", 'Marital Status *', 
+        order = ["Ethnicity *", "Sex *", "Date Of Birth *", "Country*", "State *", 'Preferred Language',
+                "Preferred Contact", 'Ok to receive msgs', 'App.Reminder Contact', "Status", 'Marital Status *',
                 "How did you find us?", "Gender Identity", "Sexual Orientation",
                 "Facility", 'Automatically update Demographics information for self insured', 'Automatically update Address information in insurance (other relations)']
-        
+
         txt_dict = {}
-        keys = []
         for i in txt_inp:
             txt_key = unidecode(i.parent.find_previous("span").text)
             if txt_key == "Date Of Birth *":
@@ -245,8 +261,8 @@ class PatientPage(ContentPage):
             opt_key = unidecode(i.parent.find_previous("span").text)
             if opt_key in order:
                 selected = i.findChild("option", selected="selected")
-                if (selected == None) or (selected.text in [None, "--Select--", "-Select-"]):
-                    opt_dict[opt_key] = None    
+                if (selected is None) or (selected.text in [None, "--Select--", "-Select-"]):
+                    opt_dict[opt_key] = None
                 else:
                     opt_dict[opt_key] = selected.text
 
@@ -260,21 +276,21 @@ class PatientPage(ContentPage):
         race_dict = {}
         chk_dict = {}
         for i in chk_inp:
-            if i.get("checked") == "checked":  
-                if i.get('title') != None:
+            if i.get("checked") == "checked":
+                if i.get('title') is not None:
                     race_dict[i.get("title")] = 1
                 else:
                     chk_dict[unidecode(i.nextSibling.text)] = 1
             else:
-                if i.get('title') != None:
+                if i.get('title') is not None:
                     race_dict[i.get("title")] = 0
                 else:
                     chk_dict[unidecode(i.nextSibling.text)] = 0
-                    
+
         order = order + list(race_dict.keys())
-        
+
         final_dict = {**txt_dict,**race_dict,**chk_dict,**btn_dict,**opt_dict}
-        
+
         return {k: final_dict[k] for k in order}
 
     # Pull patient demographic data based on a list of chart numbers and return a dataframe of all the patient data
@@ -301,7 +317,7 @@ class PatientPage(ContentPage):
                 pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
                 break
         pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
-        
+
         # try:
         #     df = []
         #     for i in chart_ls:
@@ -310,13 +326,13 @@ class PatientPage(ContentPage):
         #         temp.update({"Chart #" : i})
         #         df.append(temp)
         #     pd.DataFrame(df).to_csv(f"{self.mydir}\\pull{i}.csv")
-    
+
         # except:
         #     failed.append(i)
         #     pd.DataFrame(failed).to_csv(f"{self.mydir}\\failed{i}.csv")
         #     continue
             # pd.DataFrame(df).to_csv(f"{self.mydir}\\pull{i}.csv")
-    
+
     # Prepares a dataframe for pull_data_ls()
     # Removes Chart # = 0, gets unique Chart #'s
     def prep_pull(self, file):
