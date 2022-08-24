@@ -18,7 +18,7 @@ class WebPage():
     def __init__(self, driver, wait) -> None:
         self.driver = driver
         self.wait = wait
-        self.mydir = ""
+        self.mydir = "E:\\dir1\\h3rc\\niu\\data\\"
         self.content = '_ctl0_ContentPlaceHolder1_gv'
 
     # Generates the bs4 html for the page
@@ -32,7 +32,7 @@ class WebPage():
     # For merging files after being collected in the data folder
     # Mostly been used to combine .csv files after set_date_month(tableid, date_from_val, date_to_val) and set_date_submit(tableid, date_from_val, date_to_val, day_intervals)
     def merge(self, savefile):
-        files = os.path.join(self.mydir, "*.csv")
+        files = os.path.join(self.mydir, "\\", "*.csv")
         files = glob.glob(files)
         df = pd.concat(map(pd.read_csv, files), ignore_index = True)
         df = df.iloc[: , 1:]
@@ -161,7 +161,7 @@ class ReportPage(ContentPage):
 
         for i,v in enumerate(split_range):
             self.set_date("YTD", v[0], v[1])
-            self.pull(tableid, savefile = f"{self.mydir}temp{i}.csv")
+            self.pull(tableid, savefile = f"{self.mydir}\\temp{i}.csv")
 
     # Pulls data by month
     # Use this when pulling data from Year to Date or Month to Date
@@ -182,7 +182,7 @@ class ReportPage(ContentPage):
             run = self.driver.find_element(By.XPATH, '//*[@id="_ctl0_ContentPlaceHolder1_btnRunItNow"]')
             run.click()
 
-            self.pull(tableid, savefile = f"{self.mydir+str(i)+month+year}.csv")
+            self.pull(tableid, savefile = f"{self.mydir} + '\\' + {str(i)+month+year}.csv")
 
 # Specifically created to pull patient demographic data
 class PatientPage(ContentPage):
@@ -291,16 +291,16 @@ class PatientPage(ContentPage):
             except (NoSuchElementException) as error:
                 print(error)
                 failed.append(i)
-                pd.DataFrame(failed).to_csv(f"{self.mydir}failed.csv")
-                pd.DataFrame(df).to_csv(f"{self.mydir}pulled.csv")
+                pd.DataFrame(failed).to_csv(f"{self.mydir}\\failed.csv")
+                pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
                 continue
             except (NoSuchWindowException) as error:
                 print(error)
                 failed.append(i)
-                pd.DataFrame(failed).to_csv(f"{self.mydir}failed.csv")
-                pd.DataFrame(df).to_csv(f"{self.mydir}pulled.csv")
+                pd.DataFrame(failed).to_csv(f"{self.mydir}\\failed.csv")
+                pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
                 break
-        pd.DataFrame(df).to_csv(f"{self.mydir}pulled.csv")
+        pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
         
         # try:
         #     df = []
@@ -309,21 +309,21 @@ class PatientPage(ContentPage):
         #         temp = self.pull_patient_data()
         #         temp.update({"Chart #" : i})
         #         df.append(temp)
-        #     pd.DataFrame(df).to_csv(f"{self.mydir}pull{i}.csv")
+        #     pd.DataFrame(df).to_csv(f"{self.mydir}\\pull{i}.csv")
     
         # except:
         #     failed.append(i)
-        #     pd.DataFrame(failed).to_csv(f"{self.mydir}failed{i}.csv")
+        #     pd.DataFrame(failed).to_csv(f"{self.mydir}\\failed{i}.csv")
         #     continue
-            # pd.DataFrame(df).to_csv(f"{self.mydir}pull{i}.csv")
+            # pd.DataFrame(df).to_csv(f"{self.mydir}\\pull{i}.csv")
     
     # Prepares a dataframe for pull_data_ls()
     # Removes Chart # = 0, gets unique Chart #'s
     def prep_pull(self, file):
-        df = pd.read_csv(self.mydir+file, index_col=0)
+        df = pd.read_csv(self.mydir+"\\"+file, index_col=0)
         df.drop(df[df["Chart #"] == 0].index)
         chart = pd.unique(df["Chart #"]).tolist()
 
-        pd.DataFrame(chart).to_csv(self.mydir+"chart.csv")
+        pd.DataFrame(chart).to_csv(self.mydir+"\\chart.csv")
 
         return chart

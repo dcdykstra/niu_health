@@ -4,7 +4,7 @@ import xlsxwriter
 class XLSX():
     def __init__(self, date) -> None:
         self.workbook_dict = {}
-        self.subdir = ''
+        self.subdir = 'E:\\dir1\\h3rc\\niu\\data\\'
         self.date = date
         self.file_name = f'Detainee_List_{self.date}.xlsx'
         self.sheet1= f'{self.date}_CRD List' 
