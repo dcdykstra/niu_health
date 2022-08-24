@@ -13,17 +13,22 @@
 Paste this into run_niu.py
 ```python
 def test_detainee(self):
+    path = os.path.dirname(os.path.abspath(__file__))
+    config = ConfigParser()
+    config.read(f"{path}\\config.ini")
+    userinfo = config["USERINFO"]
+    
     driver = self.driver
     wait = self.wait
 
     login = LoginPage(driver, wait)
     report = ReportPage(driver, wait)
     niu = NIU(driver, wait)
-    dates = ["08-11-2022","08-12-2022"]
+    dates = userinfo["dates"].split(",")
 
     driver.get("https://service.emedpractice.com/index.aspx")
-    login.enter_username("YOUR_USERNAME")
-    login.enter_password("YOUR_PASSWORD")
+    login.enter_username(userinfo["loginid"])
+    login.enter_password(userinfo["password"])
     login.click_login()
 
     report.nav_reports()
@@ -52,6 +57,11 @@ def test_detainee(self):
 # Must import CPTs_Report_Page
 # from cpt_report import CPTs_Report_Page
 def test_cpt(self):
+    path = os.path.dirname(os.path.abspath(__file__))
+    config = ConfigParser()
+    config.read(f"{path}\\config.ini")
+    userinfo = config["USERINFO"]
+    
     driver = self.driver
     wait = self.wait
 
@@ -59,8 +69,8 @@ def test_cpt(self):
     report = CPTs_Report_Page(driver, wait)
 
     driver.get("https://service.emedpractice.com/index.aspx")
-    login.enter_username("YOUR_USERNAME")
-    login.enter_password("YOUR_PASSWORD")
+    login.enter_username(userinfo["loginid"])
+    login.enter_password(userinfo["password"])
     login.click_login()
 
     report.nav_reports()
