@@ -1,15 +1,19 @@
-from selenium import webdriver
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
+import configparser
 import unittest
 import time
+import os
 
 from classes import *
 from niu import NIU
 from xlsx_writer_niu import XLSX
 from cpt_report import CPTs_Report_Page
+
+from configparser import ConfigParser
+from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 class RunTest(unittest.TestCase):
 
@@ -28,17 +32,31 @@ class RunTest(unittest.TestCase):
         cls.wait = WebDriverWait(cls.driver, 20)
 
     def test_detainee(self):
+        path = os.path.dirname(os.path.abspath(__file__))
+        config = ConfigParser()
+        # config["USERINFO"] = {
+        #     "loginid": "YOUR_USERNAME",
+        #     "password": "YOUR_PASSWORD",
+        #     "dates": "MM-DD-YYYY, MM-DD-YYYY",
+        #     "datadir": "YOUR_DATA_FOLDER_DIRECTORY"
+        # }
+        # with open(f'{path}\\config.ini', 'w') as conf:
+        #     config.write(conf)
+
+        config.read(f"{path}\\config.ini")
+        userinfo = config["USERINFO"]
+
         driver = self.driver
         wait = self.wait
 
         login = LoginPage(driver, wait)
         report = ReportPage(driver, wait)
         niu = NIU(driver, wait)
-        dates = ["08-22-2022"]
+        dates = userinfo["dates"].split(",")
 
         driver.get("https://service.emedpractice.com/index.aspx")
-        login.enter_username("")
-        login.enter_password("")
+        login.enter_username(userinfo["loginid"])
+        login.enter_password(userinfo["password"])
         login.click_login()
 
         report.nav_reports()

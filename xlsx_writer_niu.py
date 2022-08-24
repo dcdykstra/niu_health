@@ -1,9 +1,15 @@
 import pandas as pd
+import os
+from configparser import ConfigParser
 
 class XLSX():
     def __init__(self, date) -> None:
+        path = os.path.dirname(os.path.abspath(__file__))
+        config = ConfigParser()
+        config.read(f"{path}\\config.ini")
+        userinfo = config["USERINFO"]
+        self.subdir = userinfo["datadir"]
         self.workbook_dict = {}
-        self.subdir = 'E:\\dir1\\h3rc\\niu\\data\\'
         self.date = date
         self.file_name = f'Detainee_List_{self.date}.xlsx'
         self.sheet1= f'{self.date}_CRD List'
@@ -24,7 +30,7 @@ class XLSX():
         self.workbook_dict[sel_date + '-' + name] = sheet_dict
 
     def write_report(self, df1, df2):
-        writer = pd.ExcelWriter(self.subdir + self.file_name, engine='xlsxwriter')
+        writer = pd.ExcelWriter(self.subdir + "\\" + self.file_name, engine='xlsxwriter')
 
         sheets_in_writer = [self.sheet1, self.sheet2]
         df_for_writer=[df1, df2]

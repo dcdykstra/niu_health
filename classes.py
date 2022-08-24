@@ -7,6 +7,7 @@ from datetime import timedelta
 from bs4 import BeautifulSoup
 from unidecode import unidecode
 
+from configparser import ConfigParser
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
@@ -17,9 +18,13 @@ from selenium.common.exceptions import (TimeoutException,
 
 class WebPage():
     def __init__(self, driver, wait) -> None:
+        path = os.path.dirname(os.path.abspath(__file__))
+        config = ConfigParser()
+        config.read(f"{path}\\config.ini")
+        userinfo = config["USERINFO"]
         self.driver = driver
         self.wait = wait
-        self.mydir = "E:\\dir1\\h3rc\\niu\\data\\"
+        self.mydir = userinfo["datadir"]
         self.content = '_ctl0_ContentPlaceHolder1_gv'
 
     # Generates the bs4 html for the page
@@ -37,7 +42,7 @@ class WebPage():
     set_date_submit(tableid, date_from_val, date_to_val, day_intervals)
     """
     def merge(self, savefile):
-        files = os.path.join(self.mydir, "\\", "*.csv")
+        files = os.path.join(self.mydir, "*.csv")
         files = glob.glob(files)
         df = pd.concat(map(pd.read_csv, files), ignore_index = True)
         df = df.iloc[: , 1:]
