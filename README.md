@@ -6,49 +6,6 @@
 + Fill out info in config.ini
 + Run run_niu.py
 
-### Example code block for generation of daily .XLSX workbook
-Paste this into run_niu.py
-```python
-def test_detainee(self):
-    path = os.path.dirname(os.path.abspath(__file__))
-    config = ConfigParser()
-    config.read(f"{path}\\config.ini")
-    userinfo = config["USERINFO"]
-    
-    driver = self.driver
-    wait = self.wait
-
-    login = LoginPage(driver, wait)
-    report = ReportPage(driver, wait)
-    niu = NIU(driver, wait)
-    dates = userinfo["dates"].split(",")
-
-    driver.get("https://service.emedpractice.com/index.aspx")
-    login.enter_username(userinfo["loginid"])
-    login.enter_password(userinfo["password"])
-    login.click_login()
-
-    report.nav_reports()
-    for date in dates:
-        report.load_report("AppointmentReportv1")
-        niu.stage_apt(date, date)
-        apt = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvAppointments")
-
-        report.load_report("visitreport")
-        niu.stage_pt(date, date)
-        visit = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvCount")
-
-        report.load_report("cpt_bills_reportV2")
-        niu.stage_cpt(date, date)
-        cpt = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvreport")
-
-        p1 = niu.gen_final(visit, apt, cpt, page = 1)
-        p2 = niu.gen_final(cpt, visit, apt, page = 2)
-
-        xlsx = XLSX(date)
-        xlsx.write_report(p1, p2)
-```
-
 ### Example code block for pulling of specific cpt codes
 ```python
 # Must import CPTs_Report_Page
