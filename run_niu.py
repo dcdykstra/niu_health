@@ -9,6 +9,7 @@ from xlsx_writer_niu import XLSX
 from cpt_report import CPTs_Report_Page
 from log import logger
 
+from datetime import date, timedelta
 from configparser import ConfigParser
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -36,16 +37,6 @@ class RunTest(unittest.TestCase):
         path = os.path.dirname(os.path.abspath(__file__))
         config = ConfigParser()
 
-        ### To create your config.ini file in the first place
-        # config["USERINFO"] = {
-        #     "loginid": "YOUR_USERNAME",
-        #     "password": "YOUR_PASSWORD",
-        #     "dates": "MM-DD-YYYY, MM-DD-YYYY",
-        #     "datadir": "YOUR_DATA_FOLDER_DIRECTORY"
-        # }
-        # with open(f'{path}\\config.ini', 'w') as conf:
-        #     config.write(conf)
-
         config.read(f"{path}\\config.ini")
         userinfo = config["USERINFO"]
 
@@ -55,33 +46,44 @@ class RunTest(unittest.TestCase):
         login = LoginPage(driver, wait)
         report = ReportPage(driver, wait)
         niu = NIU(driver, wait)
-        dates = userinfo["dates"].replace(" ", "").split(",")
 
+        # Set date to previous date
+        # Necessary if fully automating and using a task scheduler
+        day = date.today() - timedelta(days=1)
+        day = day.strftime("%m-%d-%Y")
+
+        # Login
         driver.get("https://service.emedpractice.com/index.aspx")
         login.enter_username(userinfo["loginid"])
         login.enter_password(userinfo["password"])
         login.click_login()
 
+        # Go to report page
         report.nav_reports()
-        for date in dates:
-            logger.info(f"Starting Date {date}")
-            report.load_report("AppointmentReportv1")
-            niu.stage_apt(date, date)
-            apt = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvAppointments")
+        logger.info(f"Starting Date {day}")
 
-            report.load_report("visitreport")
-            niu.stage_pt(date, date)
-            visit = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvCount")
+        # Load, stage, and scrape Appointments Report
+        report.load_report("AppointmentReportv1")
+        niu.stage_apt(day, day)
+        apt = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvAppointments")
 
-            report.load_report("cpt_bills_reportV2")
-            niu.stage_cpt(date, date)
-            cpt = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvreport")
+        # Load, stage, and scrape Patient Visit Report
+        report.load_report("visitreport")
+        niu.stage_pt(day, day)
+        visit = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvCount")
 
-            p1 = niu.gen_final(visit, apt, cpt, page = 1)
-            p2 = niu.gen_final(cpt, visit, apt, page = 2)
+        # Load, stage, and scrape CPT Codes Report
+        report.load_report("cpt_bills_reportV2")
+        niu.stage_cpt(day, day)
+        cpt = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvreport")
 
-            xlsx = XLSX(date)
-            xlsx.write_report(p1, p2)
+        # Generate data for XLSX pages
+        p1 = niu.gen_final(visit, apt, cpt, page = 1)
+        p2 = niu.gen_final(cpt, visit, apt, page = 2)
+
+        # Write data into XLSX workbook
+        xlsx = XLSX(day)
+        xlsx.write_report(p1, p2)
 
         time.sleep(2)
         logger.info("Completed Execution")
