@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from configparser import ConfigParser
+from log import logger
 
 class XLSX():
     def __init__(self, date) -> None:

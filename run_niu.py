@@ -7,6 +7,7 @@ from classes import *
 from niu import NIU
 from xlsx_writer_niu import XLSX
 from cpt_report import CPTs_Report_Page
+from log import logger
 
 from configparser import ConfigParser
 from selenium import webdriver
@@ -34,6 +35,8 @@ class RunTest(unittest.TestCase):
     def test_detainee(self):
         path = os.path.dirname(os.path.abspath(__file__))
         config = ConfigParser()
+
+        ### To create your config.ini file in the first place
         # config["USERINFO"] = {
         #     "loginid": "YOUR_USERNAME",
         #     "password": "YOUR_PASSWORD",
@@ -52,7 +55,7 @@ class RunTest(unittest.TestCase):
         login = LoginPage(driver, wait)
         report = ReportPage(driver, wait)
         niu = NIU(driver, wait)
-        dates = userinfo["dates"].split(",")
+        dates = userinfo["dates"].replace(" ", "").split(",")
 
         driver.get("https://service.emedpractice.com/index.aspx")
         login.enter_username(userinfo["loginid"])
@@ -61,6 +64,7 @@ class RunTest(unittest.TestCase):
 
         report.nav_reports()
         for date in dates:
+            logger.info(f"Starting Date {date}")
             report.load_report("AppointmentReportv1")
             niu.stage_apt(date, date)
             apt = niu.scrape_table("_ctl0_ContentPlaceHolder1_gvAppointments")
@@ -79,27 +83,8 @@ class RunTest(unittest.TestCase):
             xlsx = XLSX(date)
             xlsx.write_report(p1, p2)
 
-        time.sleep(5)
-
-    # def test_cpt(self):
-    #     driver = self.driver
-    #     wait = self.wait
-
-    #     login = LoginPage(driver, wait)
-    #     report = CPTs_Report_Page(driver, wait)
-
-    #     driver.get("https://service.emedpractice.com/index.aspx")
-    #     login.enter_username("ddykstra2")
-    #     login.enter_password("Temp1234!")
-    #     login.click_login()
-
-    #     report.nav_reports()
-    #     report.load_report(report.href)
-    #     report.enter_cpt_code("99214,99123")
-    #     report.set_date_month(report.table_id, "01-01-2022", "07-31-2022")
-    #     report.merge(report.mydir+"merged.csv")
-
-    #     time.sleep(10)
+        time.sleep(2)
+        logger.info("Completed Execution")
 
     @classmethod
     def tearDownClass(cls):

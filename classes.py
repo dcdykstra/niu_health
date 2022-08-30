@@ -6,6 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 from bs4 import BeautifulSoup
 from unidecode import unidecode
+from log import logger
 
 from configparser import ConfigParser
 from selenium.webdriver.common.by import By
@@ -56,10 +57,12 @@ class LoginPage(WebPage):
     def enter_username(self, username):
         self.driver.find_element(By.ID, 'email').clear()
         self.driver.find_element(By.ID, 'email').send_keys(username)
+        logger.info("Entered Username")
 
     def enter_password(self, password):
         self.driver.find_element(By.ID, 'password').clear()
         self.driver.find_element(By.ID, 'password').send_keys(password)
+        logger.info("Entered Password")
 
     def click_login(self):
         login = self.driver.find_element(By.ID, "SigninBtn")
@@ -70,6 +73,7 @@ class LoginPage(WebPage):
             cont.click()
         except:
             print("No multiple logins - continue")
+        logger.info("Clicked Login")
 
 class ContentPage(WebPage):
     def __init__(self, driver, wait) -> None:
@@ -80,6 +84,8 @@ class ContentPage(WebPage):
         self.reset_iframe()
         self.reports_menu = self.wait.until(EC.presence_of_element_located((By.XPATH, '//a[contains(@href, "tabname=Reports")]')))
         self.reports_menu.click()
+        logger.info("Navigated to Reports Page")
+
 
     # Navigates to the patient's page
     def nav_patients(self):
@@ -88,6 +94,7 @@ class ContentPage(WebPage):
         nav_menu.click()
         content_iframe = self.wait.until(EC.presence_of_element_located((By.ID, 'contentframe')))
         self.driver.switch_to.frame(content_iframe)
+        logger.info("Navigated to Patients Page")
 
 class ReportPage(ContentPage):
     def __init__(self, driver, wait) -> None:
@@ -103,6 +110,7 @@ class ReportPage(ContentPage):
         self.driver.execute_script("arguments[0].click();", report)
         report_iframe = self.wait.until(EC.presence_of_element_located((By.ID, 'ReportMasterFrame')))
         self.driver.switch_to.frame(report_iframe)
+        logger.info(f"Loaded Report {report_href}")
 
     # Pulls data from the table
     # 3 Different types of tableid's ("report", "Appointments", "Count")
@@ -125,8 +133,10 @@ class ReportPage(ContentPage):
             df["Bill#"] = df["Bill#"].apply(lambda x: x.strip("\n"))
             df.drop(df.tail(1).index, inplace=True)
             df.to_csv(savefile)
+            logger.info(f"Pulled data from {tableid} Table")
 
         except TimeoutException:
+            logger.info("TimeoutException: Failed to pull data")
             print("No Table")
 
     # Function to select dates when a date range option exists

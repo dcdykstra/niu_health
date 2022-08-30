@@ -2,7 +2,9 @@
 # everything here is unique for the Detainee Data .XLSX workbook.
 import datetime as dt
 import pandas as pd
+from log import logger
 
+from configparser import ConfigParser
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
@@ -37,6 +39,7 @@ class NIU():
 
         # Creating self.stage object for usage of functions from classes.py -> ReportPage()
         self.stage = ReportPage(self.driver, self.wait)
+        self.validation = {}
 
     # Staging appointment reports table
     # Date range only
@@ -105,8 +108,8 @@ class NIU():
                 length = len(df)
                 df.loc[length] = row
 
-
             if table_id == self.apt_table:
+                logger.info("Appointment Table has data")
                 df['ID'] = pd.to_numeric(df.iloc[:,7], errors='coerce')
                 df['Time'] = df.iloc[:,1]
                 df['Reason'] = df.iloc[:,11].str.upper()
@@ -116,6 +119,7 @@ class NIU():
                 assert (len(df)>1) and (not df["ID"].isna()[0])
 
             elif table_id == self.cpt_table:
+                logger.info("CPT Code Table has data")
                 df['ID'] = pd.to_numeric(df.iloc[:,0], errors='coerce')
                 df['Assessment Date'] = df.iloc[:,9]
                 df['CSAMI Code'] = df.iloc[:,10]
@@ -125,6 +129,7 @@ class NIU():
                 assert (len(df)>1) and (not df["ID"].isna()[0])
 
             elif table_id == self.pt_table:
+                logger.info("Patient Visit Table has data")
                 df['ID'] = pd.to_numeric(df.iloc[:,0], errors='coerce')
                 df['Last Name'] = df.iloc[:,2].str.upper()
                 df['First Name'] = df.iloc[:,3].str.upper()
@@ -144,16 +149,19 @@ class NIU():
             return df
         except:
             if table_id == self.apt_table:
+                logger.warning("Appointment Table empty")
                 empty_dict['ID'] = 0
                 empty_dict['Time'] = None
                 empty_dict['Reason'] = None
                 empty_dict['Service Date'] = None
             elif table_id == self.cpt_table:
+                logger.warning("CPT Code Table empty")
                 empty_dict['ID'] = 0
                 empty_dict['Assessment Date'] = None
                 empty_dict['CSAMI Code'] = None
                 empty_dict['CSAMI'] = None
             else:
+                logger.warning("Patient Visit Table empty")
                 empty_dict['ID'] = 0
                 empty_dict['Last Name'] = None
                 empty_dict['First Name'] = None
