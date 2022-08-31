@@ -6,9 +6,8 @@ from datetime import datetime
 from datetime import timedelta
 from bs4 import BeautifulSoup
 from unidecode import unidecode
-from log import logger
+from configlog import config, logger
 
-from configparser import ConfigParser
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
@@ -19,13 +18,9 @@ from selenium.common.exceptions import (TimeoutException,
 
 class WebPage():
     def __init__(self, driver, wait) -> None:
-        path = os.path.dirname(os.path.abspath(__file__))
-        config = ConfigParser()
-        config.read(f"{path}\\config.ini")
-        userinfo = config["USERINFO"]
         self.driver = driver
         self.wait = wait
-        self.mydir = userinfo["datadir"]
+        self.mydir = config.outputdir
         self.content = '_ctl0_ContentPlaceHolder1_gv'
 
     # Generates the bs4 html for the page
@@ -190,7 +185,7 @@ class ReportPage(ContentPage):
 
         for i,v in enumerate(split_range):
             self.set_date("YTD", v[0], v[1])
-            self.pull(tableid, savefile = f"{self.mydir}\\temp{i}.csv")
+            self.pull(tableid, savefile = os.path.join(self.mydir, f"temp{i}.csv"))
 
     # Pulls data by month
     # Use this when pulling data from Year to Date or Month to Date
@@ -210,8 +205,7 @@ class ReportPage(ContentPage):
 
             run = self.driver.find_element(By.XPATH, '//*[@id="_ctl0_ContentPlaceHolder1_btnRunItNow"]')
             run.click()
-
-            self.pull(tableid, savefile = f"{self.mydir} + '\\' + {str(i)+month+year}.csv")
+            self.pull(tableid, savefile = os.path.join(self.mydir, f"{str(i)+month+year}.csv"))
 
 # Specifically created to pull patient demographic data
 class PatientPage(ContentPage):
@@ -322,16 +316,16 @@ class PatientPage(ContentPage):
             except (NoSuchElementException) as error:
                 print(error)
                 failed.append(i)
-                pd.DataFrame(failed).to_csv(f"{self.mydir}\\failed.csv")
-                pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
+                pd.DataFrame(failed).to_csv(os.path.join(self.mydir, "failed.csv"))
+                pd.DataFrame(df).to_csv(os.path.join(self.mydir, "pulled.csv"))
                 continue
             except (NoSuchWindowException) as error:
                 print(error)
                 failed.append(i)
-                pd.DataFrame(failed).to_csv(f"{self.mydir}\\failed.csv")
-                pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
+                pd.DataFrame(failed).to_csv(os.path.join(self.mydir, "failed.csv"))
+                pd.DataFrame(df).to_csv(os.path.join(self.mydir, "pulled.csv"))
                 break
-        pd.DataFrame(df).to_csv(f"{self.mydir}\\pulled.csv")
+        pd.DataFrame(df).to_csv(os.path.join(self.mydir, "pulled.csv"))
 
         # try:
         #     df = []
@@ -340,21 +334,21 @@ class PatientPage(ContentPage):
         #         temp = self.pull_patient_data()
         #         temp.update({"Chart #" : i})
         #         df.append(temp)
-        #     pd.DataFrame(df).to_csv(f"{self.mydir}\\pull{i}.csv")
+        #     pd.DataFrame(df).to_csv(os.path.join(self.mydir, "pulled.csv"))
 
         # except:
         #     failed.append(i)
-        #     pd.DataFrame(failed).to_csv(f"{self.mydir}\\failed{i}.csv")
+        #     pd.DataFrame(failed).to_csv(os.path.join(self.mydir, "failed.csv"))
         #     continue
-            # pd.DataFrame(df).to_csv(f"{self.mydir}\\pull{i}.csv")
+            # pd.DataFrame(df).to_csv(os.path.join(self.mydir, "pulled.csv"))
 
     # Prepares a dataframe for pull_data_ls()
     # Removes Chart # = 0, gets unique Chart #'s
     def prep_pull(self, file):
-        df = pd.read_csv(self.mydir+"\\"+file, index_col=0)
+        df = pd.read_csv(os.path.join(self.mydir, file), index_col=0)
         df.drop(df[df["Chart #"] == 0].index)
         chart = pd.unique(df["Chart #"]).tolist()
 
-        pd.DataFrame(chart).to_csv(self.mydir+"\\chart.csv")
+        pd.DataFrame(chart).to_csv(os.path.join(self.mydir, "chart.csv"))
 
         return chart

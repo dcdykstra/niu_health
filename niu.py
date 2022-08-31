@@ -2,9 +2,8 @@
 # everything here is unique for the Detainee Data .XLSX workbook.
 import datetime as dt
 import pandas as pd
-from log import logger
+from configlog import logger
 
-from configparser import ConfigParser
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select

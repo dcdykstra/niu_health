@@ -1,35 +1,42 @@
 # eMed Selenium Web Scraper
 
-### Setup
-+ Download required packages
-+ Create a directory to a data folder where all the downloads will go
-+ Fill out info in config.ini
-+ Run run_niu.py
+## Requirements
 
-### Example code block for pulling of specific cpt codes
-```python
-# Must import CPTs_Report_Page
-# from cpt_report import CPTs_Report_Page
-def test_cpt(self):
-    path = os.path.dirname(os.path.abspath(__file__))
-    config = ConfigParser()
-    config.read(f"{path}\\config.ini")
-    userinfo = config["USERINFO"]
+- Python 3
+- Pip 22.2.2+
+
+You will need to install these in your computer before starting the setup
+
+## Setup
+- Download required packages by running command 
     
-    driver = self.driver
-    wait = self.wait
+    ```
+    pip install -r requirements.txt
+    ``` 
+    
+    --- or ---
 
-    login = LoginPage(driver, wait)
-    report = CPTs_Report_Page(driver, wait)
+    ```
+    pip3 install -r requirements.txt
+    ```
+- Create a `config.ini` 
+    > ***Note:*** Use example file `config.ini.example` as a starting point
+- Run the following command
+    ```
+    python run_niu.py
+    ``` 
+    --- or ---
+    ```
+    python3 run_niu.py
+    ```     
 
-    driver.get("https://service.emedpractice.com/index.aspx")
-    login.enter_username(userinfo["loginid"])
-    login.enter_password(userinfo["password"])
-    login.click_login()
+---
 
-    report.nav_reports()
-    report.load_report(report.href)
-    report.enter_cpt_code(YOUR_CPT_CODES) # ie: "99214,99123"
-    report.set_date_month(report.table_id, "01-01-2022", "07-31-2022")
-    report.merge(report.mydir+"merged.csv")
-```        
+
+## Config Data Dictionary
+
+| Key | Description |
+--- | --- |
+|`loginid`|The username to log into eMedical|
+|`password`|The password to login into eMedical|
+|`datadir`|The full path to where you want to output the data files into|

@@ -1,21 +1,16 @@
-import configparser
 import unittest
 import time
-import os
 
 from classes import *
 from niu import NIU
 from xlsx_writer_niu import XLSX
-from cpt_report import CPTs_Report_Page
-from log import logger
+from configlog import config, logger
 
 from datetime import date, timedelta
-from configparser import ConfigParser
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
 
 class RunTest(unittest.TestCase):
 
@@ -29,17 +24,11 @@ class RunTest(unittest.TestCase):
         cls.options.add_argument('--ignore-ssl-errors')
         cls.options.add_experimental_option('excludeSwitches', ['enable-logging'])
         cls.options.add_experimental_option('prefs', cls.prefs)
-        cls.driver = webdriver.Chrome(service = Service(ChromeDriverManager().install()), options=cls.options)
+        cls.driver = webdriver.Chrome(ChromeDriverManager().install(), options=cls.options)
         cls.actions = ActionChains(cls.driver)
         cls.wait = WebDriverWait(cls.driver, 20)
 
     def test_detainee(self):
-        path = os.path.dirname(os.path.abspath(__file__))
-        config = ConfigParser()
-
-        config.read(f"{path}\\config.ini")
-        userinfo = config["USERINFO"]
-
         driver = self.driver
         wait = self.wait
 
@@ -54,8 +43,8 @@ class RunTest(unittest.TestCase):
 
         # Login
         driver.get("https://service.emedpractice.com/index.aspx")
-        login.enter_username(userinfo["loginid"])
-        login.enter_password(userinfo["password"])
+        login.enter_username(config.loginid)
+        login.enter_password(config.loginpassword)
         login.click_login()
 
         # Go to report page

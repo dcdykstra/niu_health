@@ -1,15 +1,13 @@
+from distutils.command.config import config
+import imp
 import pandas as pd
 import os
-from configparser import ConfigParser
-from log import logger
+from classes import *
+from configlog import config
 
 class XLSX():
     def __init__(self, date) -> None:
-        path = os.path.dirname(os.path.abspath(__file__))
-        config = ConfigParser()
-        config.read(f"{path}\\config.ini")
-        userinfo = config["USERINFO"]
-        self.subdir = userinfo["datadir"]
+        self.subdir = config.outputdir
         self.workbook_dict = {}
         self.date = date
         self.file_name = f'Detainee_List_{self.date}.xlsx'
@@ -31,7 +29,7 @@ class XLSX():
         self.workbook_dict[sel_date + '-' + name] = sheet_dict
 
     def write_report(self, df1, df2):
-        writer = pd.ExcelWriter(self.subdir + "\\" + self.file_name, engine='xlsxwriter')
+        writer = pd.ExcelWriter(os.path.join(self.subdir, self.file_name), engine='xlsxwriter')
 
         sheets_in_writer = [self.sheet1, self.sheet2]
         df_for_writer=[df1, df2]
