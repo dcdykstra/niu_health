@@ -13,7 +13,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from classes import LoginPage, ReportPage
 from niu import NIU
 from xlsx_writer_niu import XLSX
-from configlog import config, logger
+from configlog import config, logger, day
 from googledriveupload import upload_xlsx
 
 
@@ -44,11 +44,6 @@ class RunTest(unittest.TestCase):
         login = LoginPage(driver, wait)
         report = ReportPage(driver, wait)
         niu = NIU(driver, wait)
-
-        # Set date to previous date
-        # Necessary if fully automating and using a task scheduler
-        day = date.today() - timedelta(days=1)
-        day = day.strftime("%m-%d-%Y")
 
         # Login
         driver.get("https://service.emedpractice.com/index.aspx")
