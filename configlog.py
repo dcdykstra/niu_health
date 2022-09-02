@@ -21,21 +21,23 @@ class ConfigIni():
         self.loginpassword = userinfo["password"]
         self.drivefolderid = userinfo["driveid"]
         self.currentpath = path
+        self.daysago = int(userinfo["daysago"])
 
 def mkdir_ifnotexist(path: String):
     """Created the folder if it doesn't exist"""
     if not os.path.exists(path):
         os.mkdir(path)
 
-# Creating day for naming
-day = date.today() - timedelta(days=1)
-day = day.strftime("%m-%d-%Y")
 
 # Create data output folders based on config
 config = ConfigIni()
 mkdir_ifnotexist(config.outputdir)
 logsFolderPath = os.path.join(config.outputdir, "logs")
 mkdir_ifnotexist(logsFolderPath)
+
+# Creating day for naming
+day = date.today() - timedelta(days=config.daysago)
+day = day.strftime("%m-%d-%Y")
 
 # Creates debug.log which shows all info to spot failures
 logging.basicConfig(filename=os.path.join(logsFolderPath, f"{day}debug.log"),
