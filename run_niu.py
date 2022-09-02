@@ -14,6 +14,7 @@ from classes import LoginPage, ReportPage
 from niu import NIU
 from xlsx_writer_niu import XLSX
 from configlog import config, logger
+from googledriveupload import upload_xlsx
 
 
 class RunTest(unittest.TestCase):
@@ -81,6 +82,9 @@ class RunTest(unittest.TestCase):
         # Write data into XLSX workbook
         xlsx = XLSX(day)
         xlsx.write_report(page1, page2)
+
+        # Upload to Google Drive
+        upload_xlsx(xlsx.file_name, xlsx.file_path)
 
         time.sleep(2)
         logger.info("Completed Execution")

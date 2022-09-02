@@ -14,6 +14,7 @@ class XLSX():
         self.file_name = f'Detainee_List_{self.date}.xlsx'
         self.sheet1= f'{self.date}_CRD List'
         self.sheet2= 'CSAMI Screening History'
+        self.file_path = os.path.join(self.subdir, self.file_name)
 
     # No longer necessary
     def get_col_widths(self, dataframe):
@@ -33,12 +34,12 @@ class XLSX():
         sheet_dict = dict(zip(keys, values))
         self.workbook_dict[sel_date + '-' + name] = sheet_dict
 
-    def write_report(self, df1, df2):
+    def write_report(self, data_frame1, data_frame2):
         """Create report"""
         writer = pd.ExcelWriter(os.path.join(self.subdir, self.file_name), engine='xlsxwriter')
 
         sheets_in_writer = [self.sheet1, self.sheet2]
-        df_for_writer=[df1, df2]
+        df_for_writer=[data_frame1, data_frame2]
         daily_sheet_titles = ['Summary Detainee List', 'Detainess with CSAMI Data']
         daily_sheet_subheaders = [f'Collection Date: {self.date}', '*Includes assemssent REFUSED']
 

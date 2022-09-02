@@ -19,6 +19,8 @@ class ConfigIni():
         self.outputdir = userinfo["datadir"]
         self.loginid = userinfo["loginid"]
         self.loginpassword = userinfo["password"]
+        self.drivefolderid = userinfo["driveid"]
+        self.currentpath = path
 
 def mkdir_ifnotexist(path: String):
     """Created the folder if it doesn't exist"""

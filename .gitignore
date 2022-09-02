@@ -1,2 +1,4 @@
 config.ini
 __pycache__
+.vscode
+service_account.json
