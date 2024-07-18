@@ -29,14 +29,28 @@ class CPTsReport(BasePage):
         M = Month
         R = Date Range
         """
-        selected_button = Select(
-            self.wait.until(
-                EC.element_to_be_clickable(
-                    (By.ID, "_ctl0_ContentPlaceHolder1_ddltypes")
-                )
-            )
+        search_by = self.wait.until(
+            EC.element_to_be_clickable((By.ID, "_ctl0_ContentPlaceHolder1_ddltypes"))
         )
+        selected_button = Select(search_by)
         selected_button.select_by_value(dropdown_value)
+
+    def select_date_range(self, start_date, end_date):
+        date_from = self.wait.until(
+            EC.element_to_be_clickable((By.XPATH, '//*[contains(@id, "txtFrom")]'))
+        )
+        date_from.click()
+        date_from.clear()
+        date_from.send_keys(Keys.HOME)
+        date_from.send_keys(start_date)
+
+        date_to = self.wait.until(
+            EC.element_to_be_clickable((By.XPATH, '//*[contains(@id, "txtTo")]'))
+        )
+        date_to.click()
+        date_to.clear()
+        date_to.send_keys(Keys.HOME)
+        date_to.send_keys(end_date)
 
     def click_submit(self):
         """Clicks the submit button"""
@@ -51,7 +65,7 @@ class CPTsReport(BasePage):
         submit.click()
 
     def scrape_table(self):
-        """Need to scrape table since download buttons don't funciton properly"""
+        """Need to scrape table since download buttons don't function properly"""
         self.wait.until(
             EC.presence_of_element_located(
                 (By.XPATH, '//*[contains(@id, "_ctl0_ContentPlaceHolder1_gvreport")]')

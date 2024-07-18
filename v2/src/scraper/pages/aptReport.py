@@ -33,6 +33,23 @@ class AppointmentsReport(BasePage):
         )
         selected_button.select_by_value(dropdown_value)
 
+    def select_date_range(self, start_date, end_date):
+        date_from = self.wait.until(
+            EC.element_to_be_clickable((By.XPATH, '//*[contains(@id, "txtFrom")]'))
+        )
+        date_from.click()
+        date_from.clear()
+        date_from.send_keys(Keys.HOME)
+        date_from.send_keys(start_date)
+
+        date_to = self.wait.until(
+            EC.element_to_be_clickable((By.XPATH, '//*[contains(@id, "txtTo")]'))
+        )
+        date_to.click()
+        date_to.clear()
+        date_to.send_keys(Keys.HOME)
+        date_to.send_keys(end_date)
+
     def click_submit(self):
         """Clicks the submit button"""
         submit = self.wait.until(
