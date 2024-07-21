@@ -3,7 +3,7 @@ import glob
 import pandas as pd
 from bs4 import BeautifulSoup
 
-from src.config.configlog import config
+from config.configlog import config
 
 
 class BasePage:

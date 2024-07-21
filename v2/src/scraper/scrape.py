@@ -4,19 +4,19 @@ import datetime as dt
 import pandas as pd
 
 
-from src.config.configlog import config, logger
+from config.configlog import config, logger
 
 
-from src.scraper.pages.login import LoginPage
-from src.scraper.pages.content import ContentPage
-from src.scraper.pages.practice import PracticePage
-from src.scraper.pages.reports import ReportsPage
-from src.scraper.pages.visitsReport import VisitsReport
-from src.scraper.pages.cptReport import CPTsReport
-from src.scraper.pages.aptReport import AppointmentsReport
+from scraper.pages.login import LoginPage
+from scraper.pages.content import ContentPage
+from scraper.pages.practice import PracticePage
+from scraper.pages.reports import ReportsPage
+from scraper.pages.visitsReport import VisitsReport
+from scraper.pages.cptReport import CPTsReport
+from scraper.pages.aptReport import AppointmentsReport
 
-from src.scraper.helpers.driver import Driver
-from src.scraper.helpers.cleaners import FileCleaner
+from scraper.helpers.driver import Driver
+from scraper.helpers.cleaners import FileCleaner
 
 
 def scrape_yesterday():

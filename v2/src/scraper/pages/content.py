@@ -1,8 +1,8 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from src.config.configlog import logger
-from src.scraper.pages.base import BasePage
+from config.configlog import logger
+from scraper.pages.base import BasePage
 
 
 class ContentPage(BasePage):

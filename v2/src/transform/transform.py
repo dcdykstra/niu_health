@@ -2,8 +2,8 @@ import pandas as pd
 import datetime as dt
 import numpy as np
 
-from src.transform.clean import clean_appointments, clean_cpts, clean_visitors
-from src.transform.test import (
+from transform.clean import clean_appointments, clean_cpts, clean_visitors
+from transform.test import (
     appointmentsFullfilledVisitorValidation,
     assertIsUniqueColumn,
     assertNotNullColumn,

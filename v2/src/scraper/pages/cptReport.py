@@ -7,9 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 
-from src.scraper.pages.base import BasePage
+from scraper.pages.base import BasePage
 
-from src.config.configlog import logger
+from config.configlog import logger
 
 
 class CPTsReport(BasePage):
