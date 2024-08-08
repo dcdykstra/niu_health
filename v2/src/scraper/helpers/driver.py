@@ -19,7 +19,8 @@ class Driver:
             "download.default_directory": download_path,
         }
         cls.options = webdriver.ChromeOptions()
-        # cls.options.add_argument('--headless')
+        cls.options.add_argument("--headless")
+        cls.options.add_argument("--no-sandbox")
         cls.options.add_argument("--disable-dev-shm-usage")
         cls.options.add_argument("--ignore-certificate-errors")
         cls.options.add_argument("--ignore-ssl-errors")
@@ -29,6 +30,10 @@ class Driver:
         cls.driver = webdriver.Chrome(
             options=cls.options, service=ChromeService(ChromeDriverManager().install())
         )
+        # cls.driver = webdriver.Chrome(
+        #     options=cls.options, service=ChromeService("/usr/local/bin/chromedriver")
+        # )
+
         cls.wait = WebDriverWait(cls.driver, 20)
         cls.actions = webdriver.ActionChains(cls.driver)
         print("Driver Set Up")

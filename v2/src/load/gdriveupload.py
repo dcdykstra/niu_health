@@ -1,7 +1,7 @@
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
-from config.configlog import config, logger
+from src.config.configlog import config, logger
 
 
 def upload_files(files: list):

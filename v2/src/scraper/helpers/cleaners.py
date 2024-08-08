@@ -1,6 +1,6 @@
 import os
 from zipfile import ZipFile
-from config.configlog import config
+from src.config.configlog import config
 
 
 class FileCleaner:

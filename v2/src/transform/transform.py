@@ -2,8 +2,8 @@ import pandas as pd
 import datetime as dt
 import numpy as np
 
-from transform.clean import clean_appointments, clean_cpts, clean_visitors
-from transform.test import (
+from src.transform.clean import clean_appointments, clean_cpts, clean_visitors
+from src.transform.test import (
     appointmentsFullfilledVisitorValidation,
     assertIsUniqueColumn,
     assertNotNullColumn,
@@ -49,6 +49,7 @@ def merge_daily_report(apt, cpt, vis):
     )
     now = dt.date.today()
     apt_subset["Age"] = now - apt_subset["PatientDOB"].dt.date
+    apt_subset["Age"] = apt_subset["Age"].fillna(dt.timedelta(days=0))
     apt_subset["Age"] = (apt_subset["Age"] / np.timedelta64(1, "D")).astype(int) // 365
 
     vis_charts = vis[["Chart#", "LastName", "FirstName", "Gender"]].drop_duplicates()

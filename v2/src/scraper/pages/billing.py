@@ -2,9 +2,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-from scraper.pages.base import BasePage
+from src.scraper.pages.base import BasePage
 
-from config.configlog import config, logger
+from src.config.configlog import config, logger
 
 
 class BillingReport(BasePage):

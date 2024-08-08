@@ -6,9 +6,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
-from scraper.pages.base import BasePage
+from src.scraper.pages.base import BasePage
 
-from config.configlog import logger
+from src.config.configlog import logger
 
 
 class VisitsReport(BasePage):

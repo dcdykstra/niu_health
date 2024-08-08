@@ -4,8 +4,8 @@ import pandas as pd
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-from scraper.pages.base import BasePage
-from config.configlog import logger, config
+from src.scraper.pages.base import BasePage
+from src.config.configlog import logger, config
 
 
 class PracticePage(BasePage):
